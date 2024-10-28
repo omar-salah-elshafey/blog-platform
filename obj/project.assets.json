@@ -8284,11 +8284,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\osoma\\source\\repos\\UserAuthentication\\UserAuthentication.csproj",
+      "projectUniqueName": "D:\\Omar\\Dot net\\Projects\\blog-platform\\UserAuthentication.csproj",
       "projectName": "UserAuthentication",
-      "projectPath": "C:\\Users\\osoma\\source\\repos\\UserAuthentication\\UserAuthentication.csproj",
+      "projectPath": "D:\\Omar\\Dot net\\Projects\\blog-platform\\UserAuthentication.csproj",
       "packagesPath": "C:\\Users\\osoma\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\osoma\\source\\repos\\UserAuthentication\\obj\\",
+      "outputPath": "D:\\Omar\\Dot net\\Projects\\blog-platform\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\osoma\\AppData\\Roaming\\NuGet\\NuGet.Config",
