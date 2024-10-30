@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using UserAuthentication.Data;
+using UserAuthentication.DTO_s;
 using UserAuthentication.Email;
 using UserAuthentication.Models;
 using UserAuthentication.Services;
@@ -31,12 +33,55 @@ namespace UserAuthentication.Controllers
             _tokenService = tokenService;
         }
         //[Authorize(Roles ="Admin")]
-        [HttpPost("register")]
-        public async Task<IActionResult> RegisterAsync([FromBody]RegisterUser registerUser)
+        [HttpPost("register-reader")]
+        public async Task<IActionResult> RegisterReaderAsync([FromBody]RegisterUser registerUser)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            var result = await _authService.RegisterAsync(registerUser);
+            var result = await _authService.RegisterReaderAsync(registerUser);
+
+            if (!result.IsAuthenticated)
+                return BadRequest(result.Message);
+
+            return Ok(new
+            {
+                result.Email,
+                result.Username,
+                result.Message,
+                //result.Roles,
+                result.IsAuthenticated,
+                result.IsConfirmed
+            });
+        }
+
+        [HttpPost("register-author")]
+        public async Task<IActionResult> RegisterAutherAsync([FromBody] RegisterUser registerUser)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var result = await _authService.RegisterAutherAsync(registerUser);
+
+            if (!result.IsAuthenticated)
+                return BadRequest(result.Message);
+
+            return Ok(new
+            {
+                result.Email,
+                result.Username,
+                result.Message,
+                //result.Roles,
+                result.IsAuthenticated,
+                result.IsConfirmed
+            });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("register-admin")]
+        public async Task<IActionResult> RegisterAdminAsync([FromBody] RegisterUser registerUser)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var result = await _authService.RegisterAdminAsync(registerUser);
 
             if (!result.IsAuthenticated)
                 return BadRequest(result.Message);
@@ -58,7 +103,7 @@ namespace UserAuthentication.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
             var result = await _authService.LoginAsync(model);
-
+            var user = await _userManager.FindByEmailAsync(model.Email);
             if (!result.IsAuthenticated)
                 return BadRequest(result.Message);
 
@@ -66,12 +111,12 @@ namespace UserAuthentication.Controllers
             {
                 SetRefreshTokenCookie(result.RefreshToken, result.RefreshTokenExpiresOn);
             }
-
+            SetUserIdCookie(user.Id);
+            SetUserNameCookie(user.UserName);
             return Ok(result.Token);
         }
         
         [HttpGet("refreshtoken")]
-        [Authorize]
         public async Task<IActionResult> RefreshToken()
         {
             var refreshToken = Request.Cookies["refreshToken"];
@@ -146,21 +191,25 @@ namespace UserAuthentication.Controllers
         public async Task<IActionResult> Logout()
         {
             var refreshToken = Request.Cookies["refreshToken"];
+            var userId = Request.Cookies["userId"];
+            var userName = Request.Cookies["UserName"];
             var result = await _authService.LogoutAsync(refreshToken);
             if (!result)
                 return BadRequest(result);
 
             RemoveRefreshTokenCookie(refreshToken);
+            RemoveUserIdCookie(userId);
+            RemoveUserNameCookie(userName);
             return Ok(new { message = "Successfully logged out" });
         }
 
         [HttpPost("update-user")]
         [Authorize]
-        public async Task<IActionResult> UpdateUserAsync(UpdateUserModel updateUserModel)
+        public async Task<IActionResult> UpdateUserAsync(UpdateUserDto updateUserDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            var result = await _authService.UpdateUserAsync(updateUserModel);
+            var result = await _authService.UpdateUserAsync(updateUserDto);
             return Ok(result);
         }
 
@@ -176,6 +225,28 @@ namespace UserAuthentication.Controllers
             Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
         }
 
+        private void SetUserIdCookie(string userId)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,    // Set this in production when using HTTPS
+                SameSite = SameSiteMode.Strict
+            };
+            Response.Cookies.Append("userID", userId, cookieOptions);
+        }
+
+        private void SetUserNameCookie(string userName)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,    // Set this in production when using HTTPS
+                SameSite = SameSiteMode.Strict
+            };
+            Response.Cookies.Append("userName", userName, cookieOptions);
+        }
+
         private void RemoveRefreshTokenCookie(string refreshToken)
         {
             var cookieOptions = new CookieOptions
@@ -186,6 +257,30 @@ namespace UserAuthentication.Controllers
                 SameSite = SameSiteMode.Strict
             };
             Response.Cookies.Append("refreshToken", "", cookieOptions);
+        }
+
+        private void RemoveUserIdCookie(string userId)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Expires = DateTime.UtcNow.AddDays(-1).ToLocalTime(),
+                Secure = true,    // Set this in production when using HTTPS
+                SameSite = SameSiteMode.Strict
+            };
+            Response.Cookies.Append("userID", "", cookieOptions);
+        }
+
+        private void RemoveUserNameCookie(string userName)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Expires = DateTime.UtcNow.AddDays(-1).ToLocalTime(),
+                Secure = true,    // Set this in production when using HTTPS
+                SameSite = SameSiteMode.Strict
+            };
+            Response.Cookies.Append("userName", "", cookieOptions);
         }
     }
 }

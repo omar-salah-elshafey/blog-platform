@@ -535,3 +535,5 @@ D:\Omar\Dot net\Projects\blog-platform\obj\Debug\net8.0\refint\UserAuthenticatio
 D:\Omar\Dot net\Projects\blog-platform\obj\Debug\net8.0\UserAuthentication.pdb
 D:\Omar\Dot net\Projects\blog-platform\obj\Debug\net8.0\UserAuthentication.genruntimeconfig.cache
 D:\Omar\Dot net\Projects\blog-platform\obj\Debug\net8.0\ref\UserAuthentication.dll
+D:\Omar\Dot net\Projects\blog-platform\obj\Debug\net8.0\UserAuthentication.sourcelink.json
+D:\Omar\Dot net\Projects\blog-platform\bin\Debug\net8.0\AutoMapper.dll

@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "ZZHryT1ExNQ=",
+  "dgSpecHash": "t8S2OkEU5Q4=",
   "success": true,
   "projectFilePath": "D:\\Omar\\Dot net\\Projects\\blog-platform\\UserAuthentication.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\osoma\\.nuget\\packages\\automapper\\13.0.1\\automapper.13.0.1.nupkg.sha512",
     "C:\\Users\\osoma\\.nuget\\packages\\azure.core\\1.35.0\\azure.core.1.35.0.nupkg.sha512",
     "C:\\Users\\osoma\\.nuget\\packages\\azure.identity\\1.10.3\\azure.identity.1.10.3.nupkg.sha512",
     "C:\\Users\\osoma\\.nuget\\packages\\bouncycastle.cryptography\\2.4.0\\bouncycastle.cryptography.2.4.0.nupkg.sha512",

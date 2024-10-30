@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
+using UserAuthenticationApp.Models;
 
-namespace UserAuthenticationApp.Models
+namespace UserAuthentication.Data
 {
     public class ApplicationUser : IdentityUser
     {
@@ -10,5 +11,10 @@ namespace UserAuthenticationApp.Models
         [Required, MaxLength(50)]
         public string LastName { get; set; }
         public List<RefreshToken>? RefreshTokens { get; set; }
+        // Navigation property for the posts created by the user
+        public ICollection<Post> Posts { get; set; }
+
+        // Navigation property for the comments created by the user
+        public ICollection<Comment> Comments { get; set; }
     }
 }

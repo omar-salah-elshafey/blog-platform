@@ -3,17 +3,21 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UserAuthentication.Data;
+
 
 #nullable disable
 
 namespace UserAuthentication.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241029155601_seedingRolesAndUser")]
+    partial class seedingRolesAndUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -47,6 +51,29 @@ namespace UserAuthentication.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "e2955fae-bc9a-4ed0-82f3-7a54cd7a2aa7",
+                            ConcurrencyStamp = "1",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "7cce8429-2590-4157-b950-42b912d66f7e",
+                            ConcurrencyStamp = "2",
+                            Name = "Author",
+                            NormalizedName = "AUTHOR"
+                        },
+                        new
+                        {
+                            Id = "4960480c-20db-4901-b385-954cb665b54f",
+                            ConcurrencyStamp = "3",
+                            Name = "Reader",
+                            NormalizedName = "READER"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -155,7 +182,7 @@ namespace UserAuthentication.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("UserAuthentication.Data.ApplicationUser", b =>
+            modelBuilder.Entity("UserAuthenticationApp.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -228,70 +255,26 @@ namespace UserAuthentication.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-                });
 
-            modelBuilder.Entity("UserAuthentication.Data.Comment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("PostId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PostId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Comments");
-                });
-
-            modelBuilder.Entity("UserAuthentication.Data.Post", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AuthorId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuthorId");
-
-                    b.ToTable("Posts");
+                    b.HasData(
+                        new
+                        {
+                            Id = "11f6dbf7-e2fd-4add-acf4-f4d3df7d7aba",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "19a85f94-ffb2-44da-8be1-494f2a0bc121",
+                            Email = "omarsalah@test.com",
+                            EmailConfirmed = true,
+                            FirstName = "Omar",
+                            LastName = "Salah",
+                            LockoutEnabled = false,
+                            NormalizedEmail = "OMARSALAH@TEST.COM",
+                            NormalizedUserName = "OMAR_SALAH",
+                            PasswordHash = "AQAAAAIAAYagAAAAECZJvz91Si6xsI30yIRpQkM0N7QDfVatIy/LM0asp5Aj7/P/BOrpUbxE8nHr/xKdzQ==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "7addac2f-f701-4f06-8721-3313027bb478",
+                            TwoFactorEnabled = false,
+                            UserName = "omar_salah"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -305,7 +288,7 @@ namespace UserAuthentication.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("UserAuthentication.Data.ApplicationUser", null)
+                    b.HasOne("UserAuthenticationApp.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -314,7 +297,7 @@ namespace UserAuthentication.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("UserAuthentication.Data.ApplicationUser", null)
+                    b.HasOne("UserAuthenticationApp.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -329,7 +312,7 @@ namespace UserAuthentication.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("UserAuthentication.Data.ApplicationUser", null)
+                    b.HasOne("UserAuthenticationApp.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -338,14 +321,14 @@ namespace UserAuthentication.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("UserAuthentication.Data.ApplicationUser", null)
+                    b.HasOne("UserAuthenticationApp.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("UserAuthentication.Data.ApplicationUser", b =>
+            modelBuilder.Entity("UserAuthenticationApp.Models.ApplicationUser", b =>
                 {
                     b.OwnsMany("UserAuthenticationApp.Models.RefreshToken", "RefreshTokens", b1 =>
                         {
@@ -380,48 +363,6 @@ namespace UserAuthentication.Migrations
                         });
 
                     b.Navigation("RefreshTokens");
-                });
-
-            modelBuilder.Entity("UserAuthentication.Data.Comment", b =>
-                {
-                    b.HasOne("UserAuthentication.Data.Post", "Post")
-                        .WithMany("Comments")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("UserAuthentication.Data.ApplicationUser", "User")
-                        .WithMany("Comments")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Post");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("UserAuthentication.Data.Post", b =>
-                {
-                    b.HasOne("UserAuthentication.Data.ApplicationUser", "Author")
-                        .WithMany("Posts")
-                        .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Author");
-                });
-
-            modelBuilder.Entity("UserAuthentication.Data.ApplicationUser", b =>
-                {
-                    b.Navigation("Comments");
-
-                    b.Navigation("Posts");
-                });
-
-            modelBuilder.Entity("UserAuthentication.Data.Post", b =>
-                {
-                    b.Navigation("Comments");
                 });
 #pragma warning restore 612, 618
         }

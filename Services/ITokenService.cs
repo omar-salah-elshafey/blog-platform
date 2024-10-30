@@ -1,4 +1,5 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
+using UserAuthentication.Data;
 using UserAuthenticationApp.Models;
 
 namespace UserAuthentication.Services

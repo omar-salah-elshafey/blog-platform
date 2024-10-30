@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using UserAuthenticationApp.Models;
 using Microsoft.Extensions.Options;
 using UserAuthentication.Models;
+using UserAuthentication.Data;
 namespace UserAuthentication.Email
 {
     public class EmailService : IEmailService
@@ -48,6 +49,8 @@ namespace UserAuthentication.Email
             var user = await _userManager.FindByEmailAsync(confirmEmail.Email);
             if (user == null)
                 return new AuthModel { IsConfirmed = false, Message = "User not found." };
+            if (user.EmailConfirmed)
+                return new AuthModel { Message = "Your Email is already confirmed" };
             var result = await _userManager.ConfirmEmailAsync(user, confirmEmail.Token);
             if (!result.Succeeded)
                 return new AuthModel { IsConfirmed = false, Message = "Token is not valid!" };

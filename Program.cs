@@ -5,10 +5,10 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using UserAuthentication;
+using UserAuthentication.Data;
 using UserAuthentication.Email;
-using UserAuthentication.Models;
+//using UserAuthentication.Mapper;
 using UserAuthentication.Services;
-using UserAuthenticationApp.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,7 +36,9 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IPostService, PostService>();
 
+//builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 builder.Services.Configure<JWT>(builder.Configuration.GetSection("JwtOptions"));
 
