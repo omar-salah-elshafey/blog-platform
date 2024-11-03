@@ -111,7 +111,7 @@ namespace UserAuthentication.Services
             }
             // Revoke the refresh token
             refreshToken.RevokedOn = DateTime.UtcNow.ToLocalTime();
-
+            user.RefreshTokens.Remove(refreshToken);
             // Update user with revoked token
             var result = await _userManager.UpdateAsync(user);
             if (result.Succeeded)

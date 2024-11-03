@@ -99,6 +99,12 @@ namespace UserAuthentication.Services
                 Content = postDto.Content,
                 CreatedDate = post.CreatedDate,
                 ModifiedDate = post.ModifiedDate,
+                Comments = _context.Comments.Where(x => x.PostId == post.Id).Select(c => new CommentsPostModel
+                {
+                    UserName = c.User.UserName,
+                    Content = c.Content,
+                    CreatedDate = c.CreatedDate
+                }).ToList()
             };
         }
 
@@ -107,7 +113,7 @@ namespace UserAuthentication.Services
             var post = await _context.Posts.FindAsync(id);
             if (post == null)
                 return false;
-            if (!isAdmin || post.AuthorId != userId)
+            if (!isAdmin && post.AuthorId != userId)
                 return false;
             _context.Posts.Remove(post);
             await _context.SaveChangesAsync();

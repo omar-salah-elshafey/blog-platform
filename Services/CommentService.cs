@@ -69,7 +69,9 @@ namespace UserAuthentication.Services
         {
             var comment = await _context.Comments.FindAsync(id);
             if (comment == null) return false;
-            if (!isAdmin || comment.UserId != userId) return false;
+            var post = await _context.Posts.FindAsync(comment.PostId);
+            if (post == null) return false;
+            if (!isAdmin && comment.UserId != userId && post.AuthorId != userId) return false;
             _context.Comments.Remove(comment);
             await _context.SaveChangesAsync();
             return true;
