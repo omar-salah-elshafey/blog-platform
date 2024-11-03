@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using UserAuthentication.Data;
 using UserAuthentication.DTO_s;
@@ -9,25 +10,77 @@ namespace UserAuthentication.Services
     public class PostService : IPostService
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         //private readonly IMapper _mapper;
-        public PostService(ApplicationDbContext context)
+        public PostService(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         public async Task<IEnumerable<PostModel>> GetAllPostsAsync()
         {
-            return await _context.Posts.Select(x => new PostModel
+            return await _context.Posts.Select(p=> new PostModel
             {
-                AuthorName = x.Author.UserName,
-                Title = x.Title,
-                Content = x.Content,
-                CreatedDate = x.CreatedDate,
-                ModifiedDate = x.ModifiedDate,
+                Id = p.Id,
+                AuthorName = p.Author.UserName,
+                Title = p.Title,
+                Content = p.Content,
+                CreatedDate = p.CreatedDate,
+                ModifiedDate = p.ModifiedDate,
+                Comments = p.Comments.Select(c => new CommentsPostModel
+                {
+                    UserName = c.User.UserName,
+                    Content = c.Content,
+                    CreatedDate = c.CreatedDate
+                }).ToList()
             }).ToListAsync();
         }
 
+        public async Task<IEnumerable<PostModel>> GetPostsByUserAsync(string UserName)
+        {
+            var user = await _userManager.FindByNameAsync(UserName);
+            if (user == null) return null;
+            return await _context.Posts.Where(x => x.Author.UserName == UserName)
+                .Select(p => new PostModel
+            {
+                Id = p.Id,
+                AuthorName = p.Author.UserName,
+                Title = p.Title,
+                Content = p.Content,
+                CreatedDate = p.CreatedDate,
+                ModifiedDate = p.ModifiedDate,
+                Comments = p.Comments.Select(c => new CommentsPostModel
+                {
+                    UserName = c.User.UserName,
+                    Content = c.Content,
+                    CreatedDate = c.CreatedDate
+                }).ToList()
+            }).ToListAsync();
+        }
+
+        public async Task<PostModel> GetPostByIdAsync(int id)
+        {
+            var post = await _context.Posts
+                .Where(x => x.Id == id)
+                .Select(p => new PostModel
+                {
+                    Id = p.Id,
+                    AuthorName = p.Author.UserName,
+                    Title = p.Title,
+                    Content = p.Content,
+                    CreatedDate = p.CreatedDate,
+                    ModifiedDate = p.ModifiedDate,
+                    Comments = p.Comments.Select(c => new CommentsPostModel
+                    {
+                        UserName = c.User.UserName,
+                        Content = c.Content,
+                        CreatedDate = c.CreatedDate
+                    }).ToList()
+                }).FirstOrDefaultAsync();
+            return post;
+        }
         public async Task<PostModel> CreatePostAsync(PostDto postDto, string authId, string authUserName)
         {
             var post = new Post();
@@ -40,6 +93,7 @@ namespace UserAuthentication.Services
             await _context.SaveChangesAsync();
             return new PostModel
             {
+                Id = post.Id,
                 AuthorName = authUserName,
                 Title = postDto.Title,
                 Content = postDto.Content,
@@ -48,12 +102,12 @@ namespace UserAuthentication.Services
             };
         }
 
-        public async Task<bool> DeletePostAsync(int id, string currentUserId, bool isAdmin)
+        public async Task<bool> DeletePostAsync(int id, string userId, bool isAdmin)
         {
             var post = await _context.Posts.FindAsync(id);
             if (post == null)
                 return false;
-            if (!isAdmin && post.AuthorId != currentUserId)
+            if (!isAdmin || post.AuthorId != userId)
                 return false;
             _context.Posts.Remove(post);
             await _context.SaveChangesAsync();
@@ -74,6 +128,7 @@ namespace UserAuthentication.Services
             await _context.SaveChangesAsync();
             return new PostModel
             {
+                Id = id,
                 AuthorName = authUserName,
                 Title = postDto.Title,
                 Content = postDto.Content,
