@@ -67,6 +67,7 @@ namespace UserAuthentication.Services
             var expirationTime = _tokenProviderOptions.Value.TokenLifespan.TotalMinutes;
 
             var authModel = _mapper.Map<AuthModel>(user);
+            authModel.Message = $"A verification code has been sent to your Email.{Environment.NewLine}Verify Your Email to be able to login :) ";
             await _emailService.SendEmailAsync(user.Email, "Email Verification Code.",
                 $"Hello {user.UserName}, Use this new token to verify your Email: {token}{Environment.NewLine}This code is Valid only for {expirationTime} Minutes.");
 
