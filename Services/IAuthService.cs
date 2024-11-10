@@ -8,13 +8,9 @@ namespace UserAuthentication.Services
 {
     public interface IAuthService
     {
-        Task<AuthModel> RegisterReaderAsync(RegisterUser registerUser);
-        Task<AuthModel> RegisterAutherAsync(RegisterUser registerUser);
-        Task<AuthModel> RegisterAdminAsync(RegisterUser registerUser);
+        Task<AuthModel> RegisterUserAsync(RegisterUser registerUser, string role);
         Task<AuthModel> LoginAsync(LoginModel loginModel);
         Task<string> AddRoleAsync(AddRoleModel roleModel);
-        Task<AuthModel> ResetPasswordAsync(ResetPasswordModel resetPasswordModel);
-        Task<AuthModel> ChangePasswordAsync(ChangePasswordModel changePasswordModel);
         Task<List<UserDto>> GetUSersAsync();
         Task<AuthModel> DeleteUserAsync(string userName);
         Task<bool> LogoutAsync(string refreshToken);

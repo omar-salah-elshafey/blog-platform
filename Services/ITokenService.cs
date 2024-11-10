@@ -8,7 +8,7 @@ namespace UserAuthentication.Services
     {
         Task<JwtSecurityToken> CreateJwtTokenAsync(ApplicationUser user);
         Task<AuthModel> RefreshTokenAsync(string token);
-        Task<bool> RevokeTokenAsync(string token);
+        Task<bool> RevokeRefreshTokenAsync(string token);
         Task<RefreshToken> GenerateRefreshToken();
     }
 }

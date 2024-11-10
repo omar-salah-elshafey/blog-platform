@@ -34,12 +34,13 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 });
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPasswordManagementService, PasswordManagementService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 
-//builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 builder.Services.Configure<JWT>(builder.Configuration.GetSection("JwtOptions"));
 

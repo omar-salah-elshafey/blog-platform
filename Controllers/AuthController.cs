@@ -19,26 +19,28 @@ namespace UserAuthentication.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         public readonly IAuthService _authService;
+        public readonly IPasswordManagementService _passwordManagementService;
         public readonly ITokenService _tokenService;
         private readonly ILogger<AuthController> _logger;
 
         public AuthController
             (UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager,
-            IConfiguration configuration, IAuthService authService, ITokenService tokenService)
+            IConfiguration configuration, IAuthService authService, ITokenService tokenService, IPasswordManagementService passwordManagementService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _configuration = configuration;
             _authService = authService;
             _tokenService = tokenService;
+            _passwordManagementService = passwordManagementService;
         }
-        //[Authorize(Roles ="Admin")]
+        
         [HttpPost("register-reader")]
         public async Task<IActionResult> RegisterReaderAsync([FromBody]RegisterUser registerUser)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            var result = await _authService.RegisterReaderAsync(registerUser);
+            var result = await _authService.RegisterUserAsync(registerUser, "Reader");
 
             if (!result.IsAuthenticated)
                 return BadRequest(result.Message);
@@ -59,7 +61,7 @@ namespace UserAuthentication.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            var result = await _authService.RegisterAutherAsync(registerUser);
+            var result = await _authService.RegisterUserAsync(registerUser, "Author");
 
             if (!result.IsAuthenticated)
                 return BadRequest(result.Message);
@@ -81,7 +83,7 @@ namespace UserAuthentication.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            var result = await _authService.RegisterAdminAsync(registerUser);
+            var result = await _authService.RegisterUserAsync(registerUser, "Admin");
 
             if (!result.IsAuthenticated)
                 return BadRequest(result.Message);
@@ -140,7 +142,7 @@ namespace UserAuthentication.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            var result = await _authService.ResetPasswordAsync(resetPasswordModel);
+            var result = await _passwordManagementService.ResetPasswordAsync(resetPasswordModel);
             return Ok(result.Message);
         }
         
@@ -150,7 +152,7 @@ namespace UserAuthentication.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            var result = await _authService.ChangePasswordAsync(changePasswordModel);
+            var result = await _passwordManagementService.ChangePasswordAsync(changePasswordModel);
             return Ok(result.Message);
         }
 

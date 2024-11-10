@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -22,12 +23,14 @@ namespace UserAuthentication.Services
         private readonly ITokenService _tokenService;
         private readonly ILogger<AuthService> _logger;
         private readonly IOptions<DataProtectionTokenProviderOptions> _tokenProviderOptions;
+        private readonly IMapper _mapper;
         public AuthService(UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
             IEmailService emailService,
             ITokenService tokenService,
             ILogger<AuthService> logger,
-            IOptions<DataProtectionTokenProviderOptions> tokenProviderOptions)
+            IOptions<DataProtectionTokenProviderOptions> tokenProviderOptions,
+            IMapper mapper)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -35,62 +38,11 @@ namespace UserAuthentication.Services
             _tokenService = tokenService;
             _logger = logger;
             _tokenProviderOptions = tokenProviderOptions;
+            _mapper = mapper;
         }
 
-        public async Task<AuthModel> RegisterReaderAsync(RegisterUser registerUser)
+        public async Task<AuthModel> RegisterUserAsync(RegisterUser registerUser, string role)
         {
-
-            //check if user exists
-            if (await _userManager.FindByEmailAsync(registerUser.Email) is not null)
-                return new AuthModel { Message = "This Email is already used!" };
-            if (await _userManager.FindByNameAsync(registerUser.UserName) is not null)
-                return new AuthModel { Message = "This UserName is already used!" };
-            
-            // Create the new user
-            var user = new ApplicationUser
-            {
-                FirstName = registerUser.FirstName,
-                LastName = registerUser.LastName,
-                UserName = registerUser.UserName,
-                Email = registerUser.Email
-            };
-            var result = await _userManager.CreateAsync(user, registerUser.Password);
-            if (!result.Succeeded)
-            {
-                var errors = string.Empty;
-                foreach (var item in result.Errors)
-                {
-                    errors += $"{item.Description}{Environment.NewLine}";
-                }
-                return new AuthModel { Message = errors };
-            }
-            // Assign the user to the specified role
-            await _userManager.AddToRoleAsync(user, "Reader");
-
-            //var roles = await _userManager.GetRolesAsync(user);
-
-            //generating the token to verify the user's email
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
-            // Dynamically get the expiration time from the options
-            var expirationTime = _tokenProviderOptions.Value.TokenLifespan.TotalMinutes;
-
-            await _emailService.SendEmailAsync(user.Email, "Email Verification Code.",
-                $"Hello {user.UserName}, Use this new token to verify your Email: {token}{Environment.NewLine}This code is Valid only for {expirationTime} Minutes.");
-
-            return new AuthModel
-            {
-                Email = user.Email,
-                IsAuthenticated = true,
-                Username = user.UserName,
-                Message = $"A verification code has been sent to your Email.{Environment.NewLine}Verify Your Email to be able to login :) "
-            };
-
-        }
-
-        public async Task<AuthModel> RegisterAutherAsync(RegisterUser registerUser)
-        {
-
             //check if user exists
             if (await _userManager.FindByEmailAsync(registerUser.Email) is not null)
                 return new AuthModel { Message = "This Email is already used!" };
@@ -98,27 +50,15 @@ namespace UserAuthentication.Services
                 return new AuthModel { Message = "This UserName is already used!" };
 
             // Create the new user
-            var user = new ApplicationUser
-            {
-                FirstName = registerUser.FirstName,
-                LastName = registerUser.LastName,
-                UserName = registerUser.UserName,
-                Email = registerUser.Email
-            };
+            var user = _mapper.Map<ApplicationUser>(registerUser);
             var result = await _userManager.CreateAsync(user, registerUser.Password);
             if (!result.Succeeded)
             {
-                var errors = string.Empty;
-                foreach (var item in result.Errors)
-                {
-                    errors += $"{item.Description}{Environment.NewLine}";
-                }
+                var errors = string.Join(Environment.NewLine, result.Errors.Select(e => e.Description));
                 return new AuthModel { Message = errors };
             }
             // Assign the user to the specified role
-            await _userManager.AddToRoleAsync(user, "Author");
-
-            //var roles = await _userManager.GetRolesAsync(user);
+            await _userManager.AddToRoleAsync(user, role);
 
             //generating the token to verify the user's email
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -126,68 +66,11 @@ namespace UserAuthentication.Services
             // Dynamically get the expiration time from the options
             var expirationTime = _tokenProviderOptions.Value.TokenLifespan.TotalMinutes;
 
+            var authModel = _mapper.Map<AuthModel>(user);
             await _emailService.SendEmailAsync(user.Email, "Email Verification Code.",
                 $"Hello {user.UserName}, Use this new token to verify your Email: {token}{Environment.NewLine}This code is Valid only for {expirationTime} Minutes.");
 
-            return new AuthModel
-            {
-                Email = user.Email,
-                IsAuthenticated = true,
-                Username = user.UserName,
-                Message = $"A verification code has been sent to your Email.{Environment.NewLine}Verify Your Email to be able to login :) "
-            };
-
-        }
-
-        public async Task<AuthModel> RegisterAdminAsync(RegisterUser registerUser)
-        {
-
-            //check if user exists
-            if (await _userManager.FindByEmailAsync(registerUser.Email) is not null)
-                return new AuthModel { Message = "This Email is already used!" };
-            if (await _userManager.FindByNameAsync(registerUser.UserName) is not null)
-                return new AuthModel { Message = "This UserName is already used!" };
-
-            // Create the new user
-            var user = new ApplicationUser
-            {
-                FirstName = registerUser.FirstName,
-                LastName = registerUser.LastName,
-                UserName = registerUser.UserName,
-                Email = registerUser.Email
-            };
-            var result = await _userManager.CreateAsync(user, registerUser.Password);
-            if (!result.Succeeded)
-            {
-                var errors = string.Empty;
-                foreach (var item in result.Errors)
-                {
-                    errors += $"{item.Description}{Environment.NewLine}";
-                }
-                return new AuthModel { Message = errors };
-            }
-            // Assign the user to the specified role
-            await _userManager.AddToRoleAsync(user, "Admin");
-
-            //var roles = await _userManager.GetRolesAsync(user);
-
-            //generating the token to verify the user's email
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
-            // Dynamically get the expiration time from the options
-            var expirationTime = _tokenProviderOptions.Value.TokenLifespan.TotalMinutes;
-
-            await _emailService.SendEmailAsync(user.Email, "Email Verification Code.",
-                $"Hello {user.UserName}, Use this new token to verify your Email: {token}{Environment.NewLine}This code is Valid only for {expirationTime} Minutes.");
-
-            return new AuthModel
-            {
-                Email = user.Email,
-                IsAuthenticated = true,
-                Username = user.UserName,
-                Message = $"A verification code has been sent to your Email.{Environment.NewLine}Verify Your Email to be able to login :) "
-            };
-
+            return authModel;
         }
 
         public async Task<AuthModel> LoginAsync(LoginModel loginModel)
@@ -233,8 +116,6 @@ namespace UserAuthentication.Services
             return authModel;
         }
         
-
-
         public async Task<string> AddRoleAsync(AddRoleModel roleModel)
         {
             var user = await _userManager.FindByNameAsync(roleModel.UserName);
@@ -246,42 +127,6 @@ namespace UserAuthentication.Services
                 return ("User Is already assigned to this role!");
             var result = await _userManager.AddToRoleAsync(user, roleModel.Role);
             return $"User {roleModel.UserName} has been assignd to Role {roleModel.Role} Successfully :)";
-        }
-
-        public async Task<AuthModel> ResetPasswordAsync(ResetPasswordModel resetPasswordModel)
-        {
-            if (string.IsNullOrEmpty(resetPasswordModel.Email) || string.IsNullOrEmpty(resetPasswordModel.NewPassword))
-                return new AuthModel { Message = "Email and Password are required!" };
-            var user = await _userManager.FindByEmailAsync(resetPasswordModel.Email);
-            if (user == null)
-                return new AuthModel { Message = "Email is not correct!" };
-            if (!resetPasswordModel.NewPassword.Equals(resetPasswordModel.ConfirmNewPassword))
-            {
-                return new AuthModel { Message = "Confirm the new Password!" };
-            }
-            var result = await _userManager.ResetPasswordAsync(user, resetPasswordModel.Token, resetPasswordModel.NewPassword);
-            if (!result.Succeeded)
-                return new AuthModel { Message = "Token is not valid!" };
-            return new AuthModel { Message = "Your password has ben reseted successfully." };
-        }
-
-        public async Task<AuthModel> ChangePasswordAsync(ChangePasswordModel changePasswordModel)
-        {
-            if (string.IsNullOrEmpty(changePasswordModel.Email) || string.IsNullOrEmpty(changePasswordModel.CurrentPassword))
-                return new AuthModel { Message = "Email and Password are required!" };
-            var user = await _userManager.FindByEmailAsync(changePasswordModel.Email);
-            if (user == null)
-                return new AuthModel { Message = "Email is not correct!" };
-            if(changePasswordModel.CurrentPassword.Equals(changePasswordModel.NewPassword))
-                return new AuthModel { Message = "New and Old Password cannot be the same!" };
-            if (!changePasswordModel.NewPassword.Equals(changePasswordModel.ConfirmNewPassword))
-            {
-                return new AuthModel { Message = "Confirm the new Password!" };
-            }
-            var result = await _userManager.ChangePasswordAsync(user, changePasswordModel.CurrentPassword, changePasswordModel.NewPassword);
-            if (!result.Succeeded)
-                return new AuthModel { Message = "Something went wronge!" };
-            return new AuthModel { Message = "Your password has ben reseted successfully." };
         }
 
         public async Task<List<UserDto>> GetUSersAsync()
@@ -316,7 +161,7 @@ namespace UserAuthentication.Services
         public async Task<bool> LogoutAsync(string refreshToken)
         {
             // Revoke the refresh token
-            var result = await _tokenService.RevokeTokenAsync(refreshToken);
+            var result = await _tokenService.RevokeRefreshTokenAsync(refreshToken);
 
             if (!result)
             {
@@ -336,17 +181,15 @@ namespace UserAuthentication.Services
             var user = await _userManager.FindByNameAsync(updateUserDto.UserName);
             if (user is null)
                 return new UpdateUserModel { Message = $"User with UserName: {updateUserDto.UserName} isn't found!" };
-            user.UserName = updateUserDto.UserName;
-            user.FirstName = updateUserDto.FirstName;
-            user.LastName = updateUserDto.LastName;
-            await _userManager.UpdateAsync(user);
-            return new UpdateUserModel
+            
+            _mapper.Map(updateUserDto, user);
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
             {
-                UserName = updateUserDto.UserName,
-                FirstName = updateUserDto.FirstName,
-                LastName = updateUserDto.LastName,
-                Message = "User has been Updated successfully."
-            };
+                var errors = string.Join(Environment.NewLine, result.Errors.Select(e => e.Description));
+                return new UpdateUserModel { Message = $"Failed to update user: {errors}" };
+            }
+            return _mapper.Map<UpdateUserModel>(user);
         }
     }
 }

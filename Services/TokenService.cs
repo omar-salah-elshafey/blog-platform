@@ -71,15 +71,6 @@ namespace UserAuthentication.Services
             user.RefreshTokens.Add(newRefreshToken);
             await _userManager.UpdateAsync(user);
 
-            // Save changes to prevent concurrency issues
-            //    var updateResult = await _userManager.UpdateAsync(user);
-            //    if (!updateResult.Succeeded)
-            //    {
-            //        authModel.IsAuthenticated = false;
-            //        authModel.Message = "Failed to update user tokens!";
-            //        return authModel;
-            //    }
-
             var jwtToken = await CreateJwtTokenAsync(user);
             authModel.IsAuthenticated = true;
             authModel.Token = new JwtSecurityTokenHandler().WriteToken(jwtToken);
@@ -91,7 +82,7 @@ namespace UserAuthentication.Services
             return authModel;
         }
         
-        public async Task<bool> RevokeTokenAsync(string token)
+        public async Task<bool> RevokeRefreshTokenAsync(string token)
         {
             // Find user by refresh token
             var user = await _userManager.Users.SingleOrDefaultAsync(u => u.RefreshTokens.Any(t => t.Token == token));
@@ -116,7 +107,7 @@ namespace UserAuthentication.Services
             var result = await _userManager.UpdateAsync(user);
             if (result.Succeeded)
             {
-                _logger.LogInformation($"Token revoked successfully for user {user.Email} at {DateTime.UtcNow}");
+                _logger.LogInformation($"Token revoked successfully for user {user.Email} at {DateTime.UtcNow.ToLocalTime()}");
                 return true;
             }
             // Log and return false if update fails
@@ -132,7 +123,7 @@ namespace UserAuthentication.Services
             generator.GetBytes(randomNumber);
             return new RefreshToken
             {
-                createdOn = DateTime.UtcNow,
+                createdOn = DateTime.UtcNow.ToLocalTime(),
                 ExpiresOn = DateTime.Now.AddDays(1),
                 Token = Convert.ToBase64String(randomNumber)
             };
