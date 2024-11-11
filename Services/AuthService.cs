@@ -84,6 +84,11 @@ namespace UserAuthentication.Services
                 authModel.Message = "Email or Password is incorrect!";
                 return authModel;
             }
+            if (user.IsDeleted)
+            {
+                authModel.Message = "User Not Found!";
+                return authModel;
+            }
             if (!user.EmailConfirmed)
                 return new AuthModel { Message = "Please Confirm Your Email First." };
             var jwtSecurityToken = await _tokenService.CreateJwtTokenAsync(user);
@@ -136,15 +141,18 @@ namespace UserAuthentication.Services
             var userDto = new List<UserDto>();
             foreach (var user in users)
             {
-                var roles = await _userManager.GetRolesAsync(user);
-                userDto.Add(new UserDto
+                if (!user.IsDeleted)
                 {
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    UserName = user.UserName,
-                    Email = user.Email,
-                    Roles = roles.ToList(),
-                });
+                    var roles = await _userManager.GetRolesAsync(user);
+                    userDto.Add(new UserDto
+                    {
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        UserName = user.UserName,
+                        Email = user.Email,
+                        Roles = roles.ToList(),
+                    });
+                }
             }
             return userDto;
         }
@@ -154,7 +162,8 @@ namespace UserAuthentication.Services
             var user = await _userManager.FindByNameAsync(UserName);
             if (user is null)
                 return new AuthModel { Message = $"User with UserName: {UserName} isn't found!" };
-            var result = await _userManager.DeleteAsync(user);
+            user.IsDeleted = true;
+            var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
                 return new AuthModel { Message = $"An Error Occured while Deleting the user{UserName}" };
             return new AuthModel { Message = $"User with UserName: '{UserName}' has been Deleted successfully" };

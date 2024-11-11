@@ -42,7 +42,7 @@ namespace UserAuthentication.Services
                 issuer: _jwt.Issuer,
                 audience: _jwt.Audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(_jwt.Lifetime),
+                expires: DateTime.UtcNow.ToLocalTime().AddMinutes(_jwt.Lifetime),
                 signingCredentials: signingCredentials);
 
             return jwtSecurityToken;
@@ -66,7 +66,7 @@ namespace UserAuthentication.Services
                 return authModel;
             }
             // Revoke current refresh token
-            refreshToken.RevokedOn = DateTime.UtcNow;
+            refreshToken.RevokedOn = DateTime.UtcNow.ToLocalTime();
             var newRefreshToken = await GenerateRefreshToken();
             user.RefreshTokens.Add(newRefreshToken);
             await _userManager.UpdateAsync(user);
@@ -97,21 +97,20 @@ namespace UserAuthentication.Services
             // Return false if token is inactive (already revoked or expired)
             if (!refreshToken.IsActive)
             {
-                _logger.LogInformation($"Token revocation failed: token already inactive for user {user.Email}");
+                _logger.LogInformation($"Token revocation failed: token already inactive for user {user.UserName}");
                 return false;
             }
             // Revoke the refresh token
             refreshToken.RevokedOn = DateTime.UtcNow.ToLocalTime();
-            user.RefreshTokens.Remove(refreshToken);
             // Update user with revoked token
             var result = await _userManager.UpdateAsync(user);
             if (result.Succeeded)
             {
-                _logger.LogInformation($"Token revoked successfully for user {user.Email} at {DateTime.UtcNow.ToLocalTime()}");
+                _logger.LogInformation($"Token revoked successfully for user {user.UserName} at {DateTime.UtcNow.ToLocalTime()}");
                 return true;
             }
             // Log and return false if update fails
-            _logger.LogError($"Token revocation failed for user {user.Email} due to update failure.");
+            _logger.LogError($"Token revocation failed for user {user.UserName} due to update failure.");
             return false;
         }
 

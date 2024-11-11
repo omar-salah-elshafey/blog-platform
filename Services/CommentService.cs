@@ -22,7 +22,7 @@ namespace UserAuthentication.Services
             {
                 Id = x.Id,
                 PostId = x.PostId,
-                UserName = x.User.UserName,
+                UserName = x.User.IsDeleted ? "Deleted Account" : x.User.UserName,
                 Content = x.Content,
                 CreatedDate = x.CreatedDate,
             }).ToListAsync();
@@ -31,7 +31,7 @@ namespace UserAuthentication.Services
         public async Task<IEnumerable<CommentModel>> GetCommentsByUserAsync(string UserName)
         {
             var user = await _userManager.FindByNameAsync(UserName);
-            if (user == null) return null;
+            if (user == null || user.IsDeleted) return null;
             return await _context.Comments.Where(c => c.User.UserName == UserName)
                 .Select(x => new CommentModel
             {

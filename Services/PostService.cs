@@ -24,14 +24,14 @@ namespace UserAuthentication.Services
             return await _context.Posts.Select(p=> new PostModel
             {
                 Id = p.Id,
-                AuthorName = p.Author.UserName,
+                AuthorName = p.Author.IsDeleted ? "Deleted Account" : p.Author.UserName,
                 Title = p.Title,
                 Content = p.Content,
                 CreatedDate = p.CreatedDate,
                 ModifiedDate = p.ModifiedDate,
                 Comments = p.Comments.Select(c => new CommentsPostModel
                 {
-                    UserName = c.User.UserName,
+                    UserName = c.User.IsDeleted ? "Deleted Account" : c.User.UserName,
                     Content = c.Content,
                     CreatedDate = c.CreatedDate
                 }).ToList()
@@ -41,7 +41,7 @@ namespace UserAuthentication.Services
         public async Task<IEnumerable<PostModel>> GetPostsByUserAsync(string UserName)
         {
             var user = await _userManager.FindByNameAsync(UserName);
-            if (user == null) return null;
+            if (user == null || user.IsDeleted) return null;
             return await _context.Posts.Where(x => x.Author.UserName == UserName)
                 .Select(p => new PostModel
             {
@@ -67,14 +67,14 @@ namespace UserAuthentication.Services
                 .Select(p => new PostModel
                 {
                     Id = p.Id,
-                    AuthorName = p.Author.UserName,
+                    AuthorName = p.Author.IsDeleted ? "Deleted Account" : p.Author.UserName,
                     Title = p.Title,
                     Content = p.Content,
                     CreatedDate = p.CreatedDate,
                     ModifiedDate = p.ModifiedDate,
                     Comments = p.Comments.Select(c => new CommentsPostModel
                     {
-                        UserName = c.User.UserName,
+                        UserName = c.User.IsDeleted ? "Deleted Account" : c.User.UserName,
                         Content = c.Content,
                         CreatedDate = c.CreatedDate
                     }).ToList()

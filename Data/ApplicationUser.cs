@@ -10,6 +10,7 @@ namespace UserAuthentication.Data
         public string FirstName { get; set; }
         [Required, MaxLength(50)]
         public string LastName { get; set; }
+        public bool IsDeleted { get; set; } = false;
         public List<RefreshToken>? RefreshTokens { get; set; }
         // Navigation property for the posts created by the user
         public ICollection<Post> Posts { get; set; }
