@@ -14,12 +14,13 @@ namespace UserAuthentication.Email
     {
         private readonly IConfiguration _config;
         private readonly UserManager<ApplicationUser> _userManager;
-        //private readonly IOptions<DataProtectionTokenProviderOptions> _tokenProviderOptions;
+        private readonly IOptions<DataProtectionTokenProviderOptions> _tokenProviderOptions;
 
-        public EmailService(IConfiguration config, UserManager<ApplicationUser> userManager)
+        public EmailService(IConfiguration config, UserManager<ApplicationUser> userManager, IOptions<DataProtectionTokenProviderOptions> tokenProviderOptions)
         {
             _config = config;
             _userManager = userManager;
+            _tokenProviderOptions = tokenProviderOptions;
         }
 
         public async Task SendEmailAsync(string toEmail, string subject, string body)
@@ -69,45 +70,12 @@ namespace UserAuthentication.Email
 
             // Generate new token
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            //var expirationTime = _tokenProviderOptions.Value.TokenLifespan.TotalMinutes;
+            var expirationTime = _tokenProviderOptions.Value.TokenLifespan.TotalMinutes;
             // Send the new token via email
             await SendEmailAsync(user.Email, "Email Verification Code",
-                $"Hello {user.UserName}, \n Use this new token to verify your Email: {token}\n This code is Valid only for 5 Minutes.");
+                $"Hello {user.UserName}, Use this new token to verify your Email: {token}\n This code is Valid only for {expirationTime} Minutes.");
 
             return new AuthModel { IsConfirmed = false, Message = "A new verification email has been sent." };
-        }
-
-        public async Task<AuthModel> ResetPasswordRequestAsync(string email)
-        {
-
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user is null)
-                return new AuthModel { Message = "The Email you Provided is not Correct!" };
-            //generating the token to verify the user's email
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-
-            // Dynamically get the expiration time from the options
-            //var expirationTime = _tokenProviderOptions.Value.TokenLifespan.TotalMinutes;
-
-            await SendEmailAsync(email, "Password Reset Code.",
-                $"Hello {user.UserName}, \n Use this new token to Reset your Password: {token}\n This code is Valid only for 5 Minutes.");
-            return new AuthModel { Message = "A Password Reset Code has been sent to your Email!" };
-        }
-
-        public async Task<AuthModel> VerifyResetPasswordRequestAsync(ConfirmEmailModel verifyREsetPassword)
-        {
-
-            if (string.IsNullOrEmpty(verifyREsetPassword.Email) || string.IsNullOrEmpty(verifyREsetPassword.Token))
-                return new AuthModel { ISPasswordResetRequestVerified = false, Message = "UserName and token are required." };
-
-            var user = await _userManager.FindByEmailAsync(verifyREsetPassword.Email);
-            if (user == null)
-                return new AuthModel { ISPasswordResetRequestVerified = false, Message = "User not found." };
-            var result = await _userManager.VerifyUserTokenAsync(user, _userManager.Options.Tokens.PasswordResetTokenProvider, "ResetPassword", verifyREsetPassword.Token);
-            if (!result)
-                return new AuthModel { ISPasswordResetRequestVerified = false, Message = "Token is not valid!" };
-
-            return new AuthModel { ISPasswordResetRequestVerified = true, Message = "Your Password reset request is verified." };
         }
     }
 

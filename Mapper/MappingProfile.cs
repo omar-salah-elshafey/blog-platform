@@ -9,7 +9,7 @@ public class MappingProfile : Profile
     public MappingProfile()
     {
         // Map between ApplicationUser and UserDto
-        CreateMap<ApplicationUser, UserDto>().ReverseMap();
+        CreateMap<ApplicationUser, UserDto>();
 
         // Map between RegisterUser and ApplicationUser
         CreateMap<RegisterUser, ApplicationUser>();

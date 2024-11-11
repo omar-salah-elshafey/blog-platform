@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using UserAuthentication.Data;
+using UserAuthentication.Email;
 using UserAuthentication.Models;
 using UserAuthenticationApp.Models;
 
@@ -8,10 +10,14 @@ namespace UserAuthentication.Services
     public class PasswordManagementService : IPasswordManagementService
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IEmailService _emailService;
+        private readonly IOptions<DataProtectionTokenProviderOptions> _tokenProviderOptions;
 
-        public PasswordManagementService(UserManager<ApplicationUser> userManager)
+        public PasswordManagementService(UserManager<ApplicationUser> userManager, IEmailService emailService, IOptions<DataProtectionTokenProviderOptions> tokenProviderOptions)
         {
             _userManager = userManager;
+            _emailService = emailService;
+            _tokenProviderOptions = tokenProviderOptions;
         }
 
         public async Task<AuthModel> ResetPasswordAsync(ResetPasswordModel resetPasswordModel)
@@ -53,6 +59,39 @@ namespace UserAuthentication.Services
                 return new AuthModel { Message = "An error occurred while changing the password!" };
 
             return new AuthModel { Message = "Your password has been updated successfully." };
+        }
+
+        public async Task<AuthModel> ResetPasswordRequestAsync(string email)
+        {
+
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user is null)
+                return new AuthModel { Message = "The Email you Provided is not Correct!" };
+            //generating the token to verify the user's email
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            // Dynamically get the expiration time from the options
+            var expirationTime = _tokenProviderOptions.Value.TokenLifespan.TotalMinutes;
+
+            await _emailService.SendEmailAsync(email, "Password Reset Code.",
+                $"Hello {user.UserName}, Use this new token to Reset your Password: {token}\n This code is Valid only for {expirationTime} Minutes.");
+            return new AuthModel { Message = "A Password Reset Code has been sent to your Email!" };
+        }
+
+        public async Task<AuthModel> VerifyResetPasswordRequestAsync(ConfirmEmailModel verifyREsetPassword)
+        {
+
+            if (string.IsNullOrEmpty(verifyREsetPassword.Email) || string.IsNullOrEmpty(verifyREsetPassword.Token))
+                return new AuthModel { ISPasswordResetRequestVerified = false, Message = "UserName and token are required." };
+
+            var user = await _userManager.FindByEmailAsync(verifyREsetPassword.Email);
+            if (user == null)
+                return new AuthModel { ISPasswordResetRequestVerified = false, Message = "User not found." };
+            var result = await _userManager.VerifyUserTokenAsync(user, _userManager.Options.Tokens.PasswordResetTokenProvider, "ResetPassword", verifyREsetPassword.Token);
+            if (!result)
+                return new AuthModel { ISPasswordResetRequestVerified = false, Message = "Token is not valid!" };
+
+            return new AuthModel { ISPasswordResetRequestVerified = true, Message = "Your Password reset request is verified." };
         }
     }
 }
