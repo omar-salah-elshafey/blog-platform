@@ -47,28 +47,5 @@ namespace UserAuthentication.Email
 
             return Ok(result.Message);
         }
-
-        [HttpPost("reset-password-request")]
-        public async Task<IActionResult> ResetPasswordRequestAsync(string email)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-            var result = await _emailService.ResetPasswordRequestAsync(email);
-            return Ok(result.Message);
-        }
-
-        [HttpPost("verify-password-reset-token")]
-        public async Task<IActionResult> VerifyResetPasswordRequestAsync(ConfirmEmailModel verifyREsetPassword)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-            // Call the service to verify the email
-            var result = await _emailService.VerifyResetPasswordRequestAsync(verifyREsetPassword);
-
-            // Check if the verification failed
-            if (!result.ISPasswordResetRequestVerified)
-                return BadRequest(new { result.Message });
-            return Ok(new {result.Message, result.ISPasswordResetRequestVerified });
-        }
     }
 }

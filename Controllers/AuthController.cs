@@ -21,11 +21,11 @@ namespace UserAuthentication.Controllers
         public readonly IAuthService _authService;
         public readonly IPasswordManagementService _passwordManagementService;
         public readonly ITokenService _tokenService;
-        private readonly ILogger<AuthController> _logger;
 
         public AuthController
             (UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager,
-            IConfiguration configuration, IAuthService authService, ITokenService tokenService, IPasswordManagementService passwordManagementService)
+            IConfiguration configuration, IAuthService authService, ITokenService tokenService,
+            IPasswordManagementService passwordManagementService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -34,7 +34,7 @@ namespace UserAuthentication.Controllers
             _tokenService = tokenService;
             _passwordManagementService = passwordManagementService;
         }
-        
+
         [HttpPost("register-reader")]
         public async Task<IActionResult> RegisterReaderAsync([FromBody]RegisterUser registerUser)
         {
@@ -213,6 +213,29 @@ namespace UserAuthentication.Controllers
                 return BadRequest(ModelState);
             var result = await _authService.UpdateUserAsync(updateUserDto);
             return Ok(result);
+        }
+
+        [HttpPost("reset-password-request")]
+        public async Task<IActionResult> ResetPasswordRequestAsync(string email)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var result = await _passwordManagementService.ResetPasswordRequestAsync(email);
+            return Ok(result.Message);
+        }
+
+        [HttpPost("verify-password-reset-token")]
+        public async Task<IActionResult> VerifyResetPasswordRequestAsync(ConfirmEmailModel verifyREsetPassword)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            // Call the service to verify the email
+            var result = await _passwordManagementService.VerifyResetPasswordRequestAsync(verifyREsetPassword);
+
+            // Check if the verification failed
+            if (!result.ISPasswordResetRequestVerified)
+                return BadRequest(new { result.Message });
+            return Ok(new { result.Message, result.ISPasswordResetRequestVerified });
         }
 
         private void SetRefreshTokenCookie(string refreshToken, DateTime ex)
